@@ -2,6 +2,13 @@ from pyrouge import Rouge155
 import tempfile, os, glob, shutil
 
 def evaluate_rouge(summaries, references, remove_temp=False, rouge_args=[]):
+    '''
+    Args:
+        summaries: [[sentence]]. Each summary is a list of strings (sentences)
+        references: [[[sentence]]]. Each reference is a list of candidate summaries.
+        remove_temp: bool. Whether to remove the temporary files created during evaluation.
+        rouge_args: [string]. A list of arguments to pass to the ROUGE CLI.
+    '''
     temp_dir = tempfile.mkdtemp()
     system_dir = os.path.join(temp_dir, 'system')
     model_dir = os.path.join(temp_dir, 'model')
@@ -39,21 +46,15 @@ def evaluate_rouge(summaries, references, remove_temp=False, rouge_args=[]):
     return r
 
 if __name__ == '__main__':
-    references = []
-    print glob.glob('/Users/dai/dev/ml/pyrouge/pyrouge/tests/data/models_plain/D30001.*')
-    # load the sample references
-    candidates = []
-    for fn in glob.glob('/Users/dai/dev/ml/pyrouge/pyrouge/tests/data/models_plain/D30001.*'):
-        with open(fn) as f:
-            reference = [x.strip() for x in f.readlines()]
-        candidates.append(reference)
-    references.append(candidates)
-    print len(references)
+    article = [
+        u"marseille prosecutor says `` so far no videos were used in the crash investigation '' despite media reports .",
+        u"journalists at bild and paris match are `` very confident '' the video clip is real , an editor says .",
+        u'andreas lubitz had informed his lufthansa training school of an episode of severe depression , airline says .',
+    ]
 
-    summaries = []
-    with open('/Users/dai/dev/ml/pyrouge/pyrouge/tests/data/systems_plain/D30001.M.100.T.A') as f:
-        summary = [x.strip() for x in f.readlines()]
-    summaries.append(summary)
+    candidates = [article]
+    references = [candidates]
+    summaries = [article]
 
     rouge_args = [
         '-c', 95,
