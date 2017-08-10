@@ -31,6 +31,21 @@ def first_three_sentences(article, sentence_start_tag='<s>', sentence_end_tag='<
     sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
     return sents[:3]
 
+@register
+def first_two_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+    sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
+    return sents[:2]
+
+@register
+def verbatim(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+    sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
+    return sents
+
+@register
+def second_sentence(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+    sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
+    return sents[1:2]
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--source', required=True, help='Path to the tokenized source file. One sample per line with sentence tags.')
