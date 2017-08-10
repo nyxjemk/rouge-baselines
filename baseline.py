@@ -3,6 +3,7 @@
 import argparse, os, re, time
 from pyrouge import Rouge155
 from util import evaluate_rouge
+from g_rouge import rouge
 
 
 def split_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
@@ -36,6 +37,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--target', required=True, help='Path to the tokenized target file. One sample per line with sentence tags.')
     parser.add_argument('-m', '--method', default='first_sentence', choices=baseline_registry.keys(), help='Baseline method to use.')
     parser.add_argument('-d', '--delete', action='store_true', help='Delete the temporary files created during evaluation.')
+    parser.add_argument('-g', '--google', action='store_true', help='Evaluate with the ROUGE implementation from google/seq2seq.')
 
     args = parser.parse_args()
 
@@ -60,23 +62,41 @@ if __name__ == '__main__':
     assert n_source == n_target, 'Source and target must have the same number of samples.'
 
     rouge_args = rouge_args = [
-        '-c', 95,
-        '-r', 1,
-        '-n', 2,
+        '-c', 95, # 95% confidence intervals, necessary for the dictionary conversion routine
+        '-r', 1, # the number of bootstrap samples for confidence bounds
+        '-n', 2, # up to bigram
         '-a',
-        '-m',
+        '-m', # stemming
     ]
 
     t0 = time.time()
+    # evaluate with official ROUGE script v1.5.5
     scores = evaluate_rouge(summaries, references, remove_temp=args.delete, rouge_args=rouge_args)
     dt = time.time() - t0
 
+    print '* method', args.method
+
     headers = ['rouge_1_precision', 'rouge_1_recall', 'rouge_1_f_score', 'rouge_2_precision', 'rouge_2_recall', 'rouge_2_f_score', 'rouge_l_precision', 'rouge_l_recall', 'rouge_l_f_score']
 
-    print '* method', args.method
     print headers
     for header in headers:
         print scores[header],
     print
 
     print '* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target)
+
+    if args.google:
+        # modified ROUGE implementation based on https://github.com/google/seq2seq
+        # modified to support multi-sentence summaries
+        t0 = time.time()
+        g_scores = rouge(summaries, [candidates[0] for candidates in references])
+        dt = time.time() - t0
+
+        g_headers = ['rouge_1/p_score', 'rouge_1/r_score', 'rouge_1/f_score', 'rouge_2/p_score', 'rouge_2/r_score', 'rouge_2/f_score', 'rouge_l/p_score', 'rouge_l/r_score', 'rouge_l/f_score']
+
+        print g_headers
+        for header in g_headers:
+            print g_scores[header],
+        print
+
+        print '* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target)
