@@ -53,6 +53,9 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--method', default='first_sentence', choices=baseline_registry.keys(), help='Baseline method to use.')
     parser.add_argument('-d', '--delete', action='store_true', help='Delete the temporary files created during evaluation.')
     parser.add_argument('-g', '--google', action='store_true', help='Evaluate with the ROUGE implementation from google/seq2seq.')
+    # ROUGE arguments
+    parser.add_argument('--no-stemming', action='store_true', help='Turn off stemming in ROUGE.')
+    parser.add_argument('--n-bootstrap', type=int, default=1000, help='The number of bootstrap samples used in ROUGE.')
 
     args = parser.parse_args()
 
@@ -78,11 +81,14 @@ if __name__ == '__main__':
 
     rouge_args = rouge_args = [
         '-c', 95, # 95% confidence intervals, necessary for the dictionary conversion routine
-        '-r', 1, # the number of bootstrap samples for confidence bounds
         '-n', 2, # up to bigram
         '-a',
-        '-m', # stemming
+        '-r', args.n_bootstrap, # the number of bootstrap samples for confidence bounds
     ]
+
+    if not args.no_stemming:
+        # add the stemming flag
+        rouge_args += ['-m']
 
     t0 = time.time()
     # evaluate with official ROUGE script v1.5.5
