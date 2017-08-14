@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     print(headers)
     for header in headers:
-        print(scores[header],)
+        print(scores[header], end=',')
     print
 
     print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))
