@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pyrouge import Rouge155
 import tempfile, os, glob, shutil
 
@@ -16,18 +17,18 @@ def evaluate_rouge(summaries, references, remove_temp=False, rouge_args=[]):
     os.makedirs(system_dir)
     # directory for reference summaries
     os.makedirs(model_dir)
-    print temp_dir, system_dir, model_dir
+    print(temp_dir, system_dir, model_dir)
 
     assert len(summaries) == len(references)
     for i, (summary, candidates) in enumerate(zip(summaries, references)):
         summary_fn = '%i.txt' % i
         for j, candidate in enumerate(candidates):
             candidate_fn = '%i.%i.txt' % (i, j)
-            with open(os.path.join(model_dir, candidate_fn), 'wb') as f:
-                f.writelines([x + '\n' for x in candidate])
+            with open(os.path.join(model_dir, candidate_fn), 'w') as f:
+                f.writelines(['%s\n' % x for x in candidate])
 
-        with open(os.path.join(system_dir, summary_fn), 'wb') as f:
-            f.writelines([x + '\n' for x in summary])
+        with open(os.path.join(system_dir, summary_fn), 'w') as f:
+            f.writelines(['%s\n' % x for x in summary])
 
     args_str = ' '.join(map(str, rouge_args))
     rouge = Rouge155(rouge_args=args_str)
@@ -38,7 +39,7 @@ def evaluate_rouge(summaries, references, remove_temp=False, rouge_args=[]):
     output = rouge.convert_and_evaluate()
 
     r = rouge.output_to_dict(output)
-    print output
+    print(output)
 
     # remove the created temporary files
     if remove_temp:
@@ -63,4 +64,4 @@ if __name__ == '__main__':
         '-n', 2,
         '-a',
     ]
-    print evaluate_rouge(summaries, references, True, rouge_args)
+    print(evaluate_rouge(summaries, references, True, rouge_args))

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import argparse, os, re, time
 from pyrouge import Rouge155
 from util import evaluate_rouge
@@ -95,16 +97,16 @@ if __name__ == '__main__':
     scores = evaluate_rouge(summaries, references, remove_temp=args.delete, rouge_args=rouge_args)
     dt = time.time() - t0
 
-    print '* method', args.method
+    print('* method', args.method)
 
     headers = ['rouge_1_precision', 'rouge_1_recall', 'rouge_1_f_score', 'rouge_2_precision', 'rouge_2_recall', 'rouge_2_f_score', 'rouge_l_precision', 'rouge_l_recall', 'rouge_l_f_score']
 
-    print headers
+    print(headers)
     for header in headers:
-        print scores[header],
+        print(scores[header],)
     print
 
-    print '* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target)
+    print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))
 
     if args.google:
         # modified ROUGE implementation based on https://github.com/google/seq2seq
@@ -115,9 +117,9 @@ if __name__ == '__main__':
 
         g_headers = ['rouge_1/p_score', 'rouge_1/r_score', 'rouge_1/f_score', 'rouge_2/p_score', 'rouge_2/r_score', 'rouge_2/f_score', 'rouge_l/p_score', 'rouge_l/r_score', 'rouge_l/f_score']
 
-        print g_headers
+        print(g_headers)
         for header in g_headers:
-            print g_scores[header],
+            print(g_scores[header],)
         print
 
-        print '* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target)
+        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))
