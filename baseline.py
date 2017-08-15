@@ -45,6 +45,31 @@ def verbatim(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
     return sents
 
 @register
+def pre_sent_tag_verbatim(article):
+    sents = article.split('<s>')
+    good_sents = []
+    for sent in sents:
+        sent = sent.strip()
+        if len(sent.split()) > 0:
+            good_sents.append(sent)
+    print(good_sents)
+    return good_sents
+
+@register
+def sent_tag_verbatim(article):
+    sents = split_sentences(article, '<t>', '</t>')
+    print(sents)
+    return sents
+
+@register
+def sent_tag_p_verbatim(article):
+    bare_article = article.strip()
+    bare_article += ' </t>'
+    sents = split_sentences(bare_article, '<t>', '</t>')
+    print(sents)
+    return sents
+
+@register
 def second_sentence(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
     sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
     return sents[1:2]
@@ -57,10 +82,11 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--delete', action='store_true', help='Delete the temporary files created during evaluation.')
     parser.add_argument('-g', '--google', action='store_true', help='Evaluate with the ROUGE implementation from google/seq2seq.')
     # ROUGE arguments
-    parser.add_argument('--no-stemming', action='store_true', help='Turn off stemming in ROUGE.')
+    parser.add_argument('--no-stemming', dest='stemming', action='store_false', help='Turn off stemming in ROUGE.')
     parser.add_argument('--n-bootstrap', type=int, default=1000, help='The number of bootstrap samples used in ROUGE.')
 
     args = parser.parse_args()
+    print('stemming', args.stemming)
 
     process = baseline_registry[args.method]
 
@@ -89,7 +115,7 @@ if __name__ == '__main__':
         '-r', args.n_bootstrap, # the number of bootstrap samples for confidence bounds
     ]
 
-    if not args.no_stemming:
+    if args.stemming:
         # add the stemming flag
         rouge_args += ['-m']
 
