@@ -9,7 +9,8 @@ from g_rouge import rouge
 
 
 def split_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
-    return re.findall(r'%s (.+?) %s' % (sentence_start_tag, sentence_end_tag), article)
+    bare_sents = re.findall(r'%s (.+?) %s' % (sentence_start_tag, sentence_end_tag), article)
+    return [sent.strip() for sent in bare_sents]
 
 # convenient decorator
 def register_to_registry(registry):
@@ -104,7 +105,7 @@ if __name__ == '__main__':
     print(headers)
     for header in headers:
         print(scores[header], end=',')
-    print
+    print()
 
     print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))
 
@@ -119,7 +120,7 @@ if __name__ == '__main__':
 
         print(g_headers)
         for header in g_headers:
-            print(g_scores[header],)
-        print
+            print(g_scores[header], end=',')
+        print()
 
         print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))

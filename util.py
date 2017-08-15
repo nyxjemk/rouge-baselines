@@ -25,10 +25,10 @@ def evaluate_rouge(summaries, references, remove_temp=False, rouge_args=[]):
         for j, candidate in enumerate(candidates):
             candidate_fn = '%i.%i.txt' % (i, j)
             with open(os.path.join(model_dir, candidate_fn), 'w') as f:
-                f.writelines(['%s\n' % x for x in candidate])
+                f.write('\n'.join(candidate))
 
         with open(os.path.join(system_dir, summary_fn), 'w') as f:
-            f.writelines(['%s\n' % x for x in summary])
+            f.writelines('\n'.join(summary))
 
     args_str = ' '.join(map(str, rouge_args))
     rouge = Rouge155(rouge_args=args_str)
