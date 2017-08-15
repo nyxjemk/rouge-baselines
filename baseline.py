@@ -10,12 +10,12 @@ from g_rouge import rouge
 
 def split_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
     bare_sents = re.findall(r'%s (.+?) %s' % (sentence_start_tag, sentence_end_tag), article)
-    return [sent.strip() for sent in bare_sents]
+    return bare_sents
 
 # convenient decorator
 def register_to_registry(registry):
     def _register(func):
-        registry[func.func_name] = func
+        registry[func.__name__] = func
         return func
     return _register
 
@@ -67,14 +67,14 @@ if __name__ == '__main__':
     n_source = 0
     references = []
     summaries = []
-    with open(args.source, 'rb') as f:
+    with open(args.source, 'r') as f:
         for i, article in enumerate(f):
             summary = process(article)
             summaries.append(summary)
             n_source += 1
 
     n_target = 0
-    with open(args.target, 'rb') as f:
+    with open(args.target, 'r') as f:
         for i, article in enumerate(f):
             candidate = split_sentences(article)
             references.append([candidate])
