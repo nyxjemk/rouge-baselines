@@ -28,7 +28,7 @@ def evaluate_rouge(summaries, references, remove_temp=False, rouge_args=[]):
                 f.write('\n'.join(candidate))
 
         with open(os.path.join(system_dir, summary_fn), 'w') as f:
-            f.writelines('\n'.join(summary))
+            f.write('\n'.join(summary))
 
     args_str = ' '.join(map(str, rouge_args))
     rouge = Rouge155(rouge_args=args_str)
