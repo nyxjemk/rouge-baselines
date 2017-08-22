@@ -3,8 +3,6 @@
 from __future__ import print_function
 
 import argparse, os, re, time
-from pyrouge import Rouge155
-from util import evaluate_rouge
 from g_rouge import rouge
 
 
@@ -58,7 +56,7 @@ def pre_sent_tag_verbatim(article):
 @register
 def sent_tag_verbatim(article):
     sents = split_sentences(article, '<t>', '</t>')
-    print(sents)
+    # print(sents)
     return sents
 
 @register
@@ -66,7 +64,7 @@ def sent_tag_p_verbatim(article):
     bare_article = article.strip()
     bare_article += ' </t>'
     sents = split_sentences(bare_article, '<t>', '</t>')
-    print(sents)
+    # print(sents)
     return sents
 
 @register
@@ -81,15 +79,16 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--method', default='first_sentence', choices=baseline_registry.keys(), help='Baseline method to use.')
     parser.add_argument('-d', '--delete', action='store_true', help='Delete the temporary files created during evaluation.')
     parser.add_argument('-g', '--google', action='store_true', help='Evaluate with the ROUGE implementation from google/seq2seq.')
+    parser.add_argument('--no-rouge', dest='run_rouge', action='store_false', help='Skip ROUGE evaluation.')
     # ROUGE arguments
     parser.add_argument('--no-stemming', dest='stemming', action='store_false', help='Turn off stemming in ROUGE.')
     parser.add_argument('--n-bootstrap', type=int, default=1000, help='The number of bootstrap samples used in ROUGE.')
 
     args = parser.parse_args()
-    print('stemming', args.stemming)
 
     process = baseline_registry[args.method]
 
+    # Read and preprocess generated summary
     n_source = 0
     references = []
     summaries = []
@@ -99,6 +98,7 @@ if __name__ == '__main__':
             summaries.append(summary)
             n_source += 1
 
+    # Read and preprocess a single candidate reference summary for each example
     n_target = 0
     with open(args.target, 'r') as f:
         for i, article in enumerate(f):
@@ -108,36 +108,40 @@ if __name__ == '__main__':
 
     assert n_source == n_target, 'Source and target must have the same number of samples.'
 
-    rouge_args = rouge_args = [
-        '-c', 95, # 95% confidence intervals, necessary for the dictionary conversion routine
-        '-n', 2, # up to bigram
-        '-a',
-        '-r', args.n_bootstrap, # the number of bootstrap samples for confidence bounds
-    ]
+    # Run official ROUGE evaluation
+    if args.run_rouge:
+        from util import evaluate_rouge
+        
+        rouge_args = rouge_args = [
+            '-c', 95, # 95% confidence intervals, necessary for the dictionary conversion routine
+            '-n', 2, # up to bigram
+            '-a',
+            '-r', args.n_bootstrap, # the number of bootstrap samples for confidence bounds
+        ]
 
-    if args.stemming:
-        # add the stemming flag
-        rouge_args += ['-m']
+        if args.stemming:
+            # add the stemming flag
+            rouge_args += ['-m']
 
-    t0 = time.time()
-    # evaluate with official ROUGE script v1.5.5
-    scores = evaluate_rouge(summaries, references, remove_temp=args.delete, rouge_args=rouge_args)
-    dt = time.time() - t0
+        t0 = time.time()
+        # evaluate with official ROUGE script v1.5.5
+        scores = evaluate_rouge(summaries, references, remove_temp=args.delete, rouge_args=rouge_args)
+        dt = time.time() - t0
 
-    print('* method', args.method)
+        print('* method', args.method)
 
-    headers = ['rouge_1_precision', 'rouge_1_recall', 'rouge_1_f_score', 'rouge_2_precision', 'rouge_2_recall', 'rouge_2_f_score', 'rouge_l_precision', 'rouge_l_recall', 'rouge_l_f_score']
+        headers = ['rouge_1_precision', 'rouge_1_recall', 'rouge_1_f_score', 'rouge_2_precision', 'rouge_2_recall', 'rouge_2_f_score', 'rouge_l_precision', 'rouge_l_recall', 'rouge_l_f_score']
 
-    print(headers)
-    for header in headers:
-        print(scores[header], end=',')
-    print()
+        print(headers)
+        for header in headers:
+            print(scores[header], end=',')
+        print()
 
-    print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))
+        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))
 
+    # Run Google's ROUGE evaluation
     if args.google:
-        # modified ROUGE implementation based on https://github.com/google/seq2seq
-        # modified to support multi-sentence summaries
+        # Based on https://github.com/google/seq2seq, modified to support multi-sentence summaries
         t0 = time.time()
         g_scores = rouge(summaries, [candidates[0] for candidates in references])
         dt = time.time() - t0
