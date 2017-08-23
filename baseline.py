@@ -77,10 +77,10 @@ def second_sentence(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--source', required=True, help='Path to the tokenized source file. One sample per line with sentence tags.')
-    parser.add_argument('-t', '--target', required=True, help='Path to the tokenized target file. One sample per line with sentence tags.')
+    parser.add_argument('-t', '--target', required=False, help='Path to the tokenized target file. One sample per line with sentence tags.')
     parser.add_argument('-m', '--method', default='first_sentence', choices=baseline_registry.keys(), help='Baseline method to use.')
     parser.add_argument('-d', '--delete', action='store_true', help='Delete the temporary files created during evaluation.')
-    parser.add_argument('-g', '--google', action='store_true', help='Evaluate with the ROUGE implementation from google/seq2seq.')
+    parser.add_argument('-g', '--google', dest='run_google_rouge', action='store_true', help='Evaluate with the ROUGE implementation from google/seq2seq.')
     parser.add_argument('--no-rouge', dest='run_rouge', action='store_false', help='Skip ROUGE evaluation.')
     parser.add_argument('-r', '--check-repeats', action='store_true', help='Evaluate self repeats.')
     # ROUGE arguments
@@ -88,6 +88,10 @@ if __name__ == '__main__':
     parser.add_argument('--n-bootstrap', type=int, default=1000, help='The number of bootstrap samples used in ROUGE.')
 
     args = parser.parse_args()
+
+    # Check the presence of target file
+    if args.run_rouge or args.run_google_rouge:
+        assert args.target is not None, 'Need the path to target file `--target` for ROUGE evaluations.'
 
     process = baseline_registry[args.method]
 
@@ -102,14 +106,15 @@ if __name__ == '__main__':
             n_source += 1
 
     # Read and preprocess a single candidate reference summary for each example
-    n_target = 0
-    with open(args.target, 'r') as f:
-        for i, article in enumerate(f):
-            candidate = split_sentences(article)
-            references.append([candidate])
-            n_target += 1
+    if args.run_rouge or args.run_google_rouge:
+        n_target = 0
+        with open(args.target, 'r') as f:
+            for i, article in enumerate(f):
+                candidate = split_sentences(article)
+                references.append([candidate])
+                n_target += 1
 
-    assert n_source == n_target, 'Source and target must have the same number of samples.'
+        assert n_source == n_target, 'Source and target must have the same number of samples.'
 
     # Run official ROUGE evaluation
     if args.run_rouge:
@@ -143,7 +148,7 @@ if __name__ == '__main__':
         print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt / n_target))
 
     # Run Google's ROUGE evaluation
-    if args.google:
+    if args.run_google_rouge:
         # Based on https://github.com/google/seq2seq, modified to support multi-sentence summaries
         t0 = time.time()
         g_scores = rouge(summaries, [candidates[0] for candidates in references])
@@ -182,9 +187,9 @@ if __name__ == '__main__':
         # Sort the statistics by importance
         str_keys = ['full-sent'] + list(map(lambda n: '%d-gram' % n, sorted(ngram_repeats.keys(), reverse=True)))
         print(','.join(str_keys))
-        print(n_sent_repeats / n_target, end=',')
+        print(n_sent_repeats / n_source, end=',')
         for n in sorted(ngram_repeats.keys(), reverse=True):
-            print(ngram_repeats[n] / n_target, end=',')
+            print(ngram_repeats[n] / n_source, end=',')
         print()
 
-        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt / n_target))
+        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_source, dt, dt / n_source))
