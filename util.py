@@ -1,6 +1,9 @@
 from __future__ import print_function
+from six.moves import xrange
 from pyrouge import Rouge155
 import tempfile, os, glob, shutil
+import numpy as np
+
 
 def evaluate_rouge(summaries, references, remove_temp=False, rouge_args=[]):
     '''
@@ -45,6 +48,15 @@ def evaluate_rouge(summaries, references, remove_temp=False, rouge_args=[]):
     if remove_temp:
         shutil.rmtree(temp_dir)
     return r
+
+def n_grams(tokens, n):
+    l = len(tokens)
+    return [tuple(tokens[i:i + n]) for i in xrange(l) if i + n < l]
+
+def has_repeat(elements):
+    d = set(elements)
+    return len(d) < len(elements)
+
 
 if __name__ == '__main__':
     article = [

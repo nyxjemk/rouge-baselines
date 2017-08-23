@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import print_function, division
 
 import argparse, os, re, time
 from g_rouge import rouge
+from util import has_repeat, n_grams
+from functools import reduce
 
 
 def split_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
@@ -50,7 +52,7 @@ def pre_sent_tag_verbatim(article):
         sent = sent.strip()
         if len(sent.split()) > 0:
             good_sents.append(sent)
-    print(good_sents)
+    # print(good_sents)
     return good_sents
 
 @register
@@ -80,6 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--delete', action='store_true', help='Delete the temporary files created during evaluation.')
     parser.add_argument('-g', '--google', action='store_true', help='Evaluate with the ROUGE implementation from google/seq2seq.')
     parser.add_argument('--no-rouge', dest='run_rouge', action='store_false', help='Skip ROUGE evaluation.')
+    parser.add_argument('-r', '--check-repeats', action='store_true', help='Evaluate self repeats.')
     # ROUGE arguments
     parser.add_argument('--no-stemming', dest='stemming', action='store_false', help='Turn off stemming in ROUGE.')
     parser.add_argument('--n-bootstrap', type=int, default=1000, help='The number of bootstrap samples used in ROUGE.')
@@ -111,7 +114,7 @@ if __name__ == '__main__':
     # Run official ROUGE evaluation
     if args.run_rouge:
         from util import evaluate_rouge
-        
+
         rouge_args = rouge_args = [
             '-c', 95, # 95% confidence intervals, necessary for the dictionary conversion routine
             '-n', 2, # up to bigram
@@ -137,7 +140,7 @@ if __name__ == '__main__':
             print(scores[header], end=',')
         print()
 
-        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))
+        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt / n_target))
 
     # Run Google's ROUGE evaluation
     if args.google:
@@ -153,4 +156,28 @@ if __name__ == '__main__':
             print(g_scores[header], end=',')
         print()
 
-        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt * 1. / n_target))
+        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt / n_target))
+
+    # Evaluate self-repetitions
+    if args.check_repeats:
+        t0 = time.time()
+        # Counts
+        n_sent_repeats = 0
+        ngram_repeats = {2: 0, 4: 0, 8: 0, 16: 0, 32: 0}
+        for summary in summaries:
+            # Sentence-level repeats
+            # Count of samples containing self-repetitions of a full sentence
+            n_sent_repeats += has_repeat(summary)
+
+            # N-gram repeats
+            for n in ngram_repeats.keys():
+                # Respect sentence boundary
+                grams = reduce(lambda x, y: x+y, [n_grams(sent.split(), n) for sent in summary], [])
+                ngram_repeats[n] += has_repeat(grams)
+
+        dt = time.time() - t0
+        print('* %g samples contains repetitions of full sentences' % (n_sent_repeats / n_target))
+        for n in sorted(ngram_repeats.keys()):
+            print('* %g samples contians repetitions of %d-grams' % (ngram_repeats[n] / n_target, n))
+
+        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt / n_target))
