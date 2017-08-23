@@ -176,8 +176,15 @@ if __name__ == '__main__':
                 ngram_repeats[n] += has_repeat(grams)
 
         dt = time.time() - t0
-        print('* %g samples contains repetitions of full sentences' % (n_sent_repeats / n_target))
-        for n in sorted(ngram_repeats.keys()):
-            print('* %g samples contians repetitions of %d-grams' % (ngram_repeats[n] / n_target, n))
+
+        print('* portion of samples that contains self-repetitions')
+
+        # Sort the statistics by importance
+        str_keys = ['full-sent'] + list(map(lambda n: '%d-gram' % n, sorted(ngram_repeats.keys(), reverse=True)))
+        print(','.join(str_keys))
+        print(n_sent_repeats / n_target, end=',')
+        for n in sorted(ngram_repeats.keys(), reverse=True):
+            print(ngram_repeats[n] / n_target, end=',')
+        print()
 
         print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt / n_target))
