@@ -8,7 +8,7 @@ from util import has_repeat, n_grams
 from functools import reduce
 
 
-def split_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+def split_sentences(article, sentence_start_tag='<t>', sentence_end_tag='</t>'):
     bare_sents = re.findall(r'%s (.+?) %s' % (sentence_start_tag, sentence_end_tag), article)
     return bare_sents
 
@@ -68,6 +68,41 @@ def sent_tag_p_verbatim(article):
     sents = split_sentences(bare_article, '<t>', '</t>')
     # print(sents)
     return sents
+
+@register
+def adhoc_old0(article):
+    sents = split_sentences(article, '<t>', '</t>')
+    good_sents = []
+    for sent in sents:
+        # Remove <unk>
+        tokens = [x for x in sent.split() if x != '<unk>']
+        # Ignore length 1 sententces
+        if len(tokens) > 1:
+            good_sents.append(' '.join(tokens))
+    return good_sents
+
+@register
+def adhoc_base(article):
+    article += ' </s> </s>'
+    first_end = article.index(' </s> </s>')
+    article = article[:first_end] + ' </s>'
+    sents = split_sentences(article)
+    good_sents = []
+    for sent in sents:
+        # Remove <unk>
+        tokens = [x for x in sent.split() if x != '<unk>']
+        # Ignore length 1 sententces
+        if len(tokens) > 1:
+            good_sents.append(' '.join(tokens))
+    return good_sents
+
+@register
+def no_sent_tag(article):
+    article = article.strip()
+    if article[-1] != '.':
+        article += ' .'
+    good_sents = list(re.findall(r'.+?\.', article))
+    return good_sents
 
 @register
 def second_sentence(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
