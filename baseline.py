@@ -8,7 +8,7 @@ from util import has_repeat, n_grams
 from functools import reduce
 
 
-def split_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+def split_sentences(article, sentence_start_tag='<t>', sentence_end_tag='</t>'):
     bare_sents = re.findall(r'%s (.+?) %s' % (sentence_start_tag, sentence_end_tag), article)
     return bare_sents
 
@@ -24,29 +24,29 @@ register = register_to_registry(baseline_registry)
 
 # baseline methods
 @register
-def first_sentence(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+def first_sentence(article, sentence_start_tag='<t>', sentence_end_tag='</t>'):
     ''' use sentence tags to output the first sentence of an article as its summary. '''
     sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
     return sents[:1]
 
 @register
-def first_three_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+def first_three_sentences(article, sentence_start_tag='<t>', sentence_end_tag='</t>'):
     sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
     return sents[:3]
 
 @register
-def first_two_sentences(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+def first_two_sentences(article, sentence_start_tag='<t>', sentence_end_tag='</t>'):
     sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
     return sents[:2]
 
 @register
-def verbatim(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+def verbatim(article, sentence_start_tag='<t>', sentence_end_tag='</t>'):
     sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
     return sents
 
 @register
 def pre_sent_tag_verbatim(article):
-    sents = article.split('<s>')
+    sents = article.split('<t>')
     good_sents = []
     for sent in sents:
         sent = sent.strip()
@@ -57,21 +57,21 @@ def pre_sent_tag_verbatim(article):
 
 @register
 def sent_tag_verbatim(article):
-    sents = split_sentences(article, '<s>', '</s>')
+    sents = split_sentences(article, '<t>', '</t>')
     # print(sents)
     return sents
 
 @register
 def sent_tag_p_verbatim(article):
     bare_article = article.strip()
-    bare_article += ' </s>'
-    sents = split_sentences(bare_article, '<s>', '</s>')
+    bare_article += ' </t>'
+    sents = split_sentences(bare_article, '<t>', '</t>')
     # print(sents)
     return sents
 
 @register
 def adhoc_old0(article):
-    sents = split_sentences(article, '<s>', '</s>')
+    sents = split_sentences(article, '<t>', '</t>')
     good_sents = []
     for sent in sents:
         # Remove <unk>
@@ -83,9 +83,9 @@ def adhoc_old0(article):
 
 @register
 def adhoc_base(article):
-    article += ' </s> </s>'
-    first_end = article.index(' </s> </s>')
-    article = article[:first_end] + ' </s>'
+    article += ' </t> </t>'
+    first_end = article.index(' </t> </t>')
+    article = article[:first_end] + ' </t>'
     sents = split_sentences(article)
     good_sents = []
     for sent in sents:
@@ -108,7 +108,7 @@ def no_sent_tag(article):
     return good_sents
 
 @register
-def second_sentence(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
+def second_sentence(article, sentence_start_tag='<t>', sentence_end_tag='</t>'):
     sents = split_sentences(article, sentence_start_tag, sentence_end_tag)
     return sents[1:2]
 
@@ -179,6 +179,7 @@ if __name__ == '__main__':
 
         print(headers)
         for header in headers:
+            print(scores)
             print("{:.2f}".format(scores[header]*100), end='\t')
         print()
 
