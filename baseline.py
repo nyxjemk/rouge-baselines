@@ -57,17 +57,55 @@ def pre_sent_tag_verbatim(article):
 
 @register
 def sent_tag_verbatim(article):
-    sents = split_sentences(article, '<t>', '</t>')
+    sents = split_sentences(article, '<s>', '</s>')
     # print(sents)
     return sents
 
 @register
 def sent_tag_p_verbatim(article):
     bare_article = article.strip()
-    bare_article += ' </t>'
-    sents = split_sentences(bare_article, '<t>', '</t>')
+    bare_article += ' </s>'
+    sents = split_sentences(bare_article, '<s>', '</s>')
     # print(sents)
     return sents
+
+@register
+def adhoc_old0(article):
+    sents = split_sentences(article, '<s>', '</s>')
+    good_sents = []
+    for sent in sents:
+        # Remove <unk>
+        tokens = [x for x in sent.split() if x != '<unk>']
+        # Ignore length 1 sententces
+        if len(tokens) > 1:
+            good_sents.append(' '.join(tokens))
+    return good_sents
+
+@register
+def adhoc_base(article):
+    article += ' </s> </s>'
+    first_end = article.index(' </s> </s>')
+    article = article[:first_end] + ' </s>'
+    sents = split_sentences(article)
+    good_sents = []
+    for sent in sents:
+        # Remove <unk>
+        tokens = [x for x in sent.split() if x != '<unk>']
+        # Ignore length 1 sententces
+        if len(tokens) > 1:
+            good_sents.append(' '.join(tokens))
+    return good_sents
+
+@register
+def no_sent_tag(article):
+    article = article.strip()
+    try:
+        if article[-1] != '.':
+            article += ' .'
+    except:
+        article += ' .'
+    good_sents = list(re.findall(r'.+?\.', article))
+    return good_sents
 
 @register
 def second_sentence(article, sentence_start_tag='<s>', sentence_end_tag='</s>'):
@@ -137,15 +175,14 @@ if __name__ == '__main__':
         dt = time.time() - t0
 
         print('* method', args.method)
-
-        headers = ['rouge_1_precision', 'rouge_1_recall', 'rouge_1_f_score', 'rouge_2_precision', 'rouge_2_recall', 'rouge_2_f_score', 'rouge_l_precision', 'rouge_l_recall', 'rouge_l_f_score']
+        headers = ['rouge_1_recall', 'rouge_1_precision', 'rouge_1_f_score', 'rouge_2_recall', 'rouge_2_precision', 'rouge_2_f_score', 'rouge_l_recall', 'rouge_l_precision', 'rouge_l_f_score']
 
         print(headers)
         for header in headers:
-            print(scores[header], end=',')
+            print("{:.2f}".format(scores[header]*100), end='\t')
         print()
 
-        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt / n_target))
+        print('* evaluated {} samples, took {:.3f}s, averaging {:.3f}s/sample'.format(n_target, dt, dt / n_target))
 
     # Run Google's ROUGE evaluation
     if args.run_google_rouge:
@@ -154,14 +191,14 @@ if __name__ == '__main__':
         g_scores = rouge(summaries, [candidates[0] for candidates in references])
         dt = time.time() - t0
 
-        g_headers = ['rouge_1/p_score', 'rouge_1/r_score', 'rouge_1/f_score', 'rouge_2/p_score', 'rouge_2/r_score', 'rouge_2/f_score', 'rouge_l/p_score', 'rouge_l/r_score', 'rouge_l/f_score']
+        g_headers = ['rouge_1/r_score', 'rouge_1/p_score', 'rouge_1/f_score', 'rouge_2/r_score', 'rouge_2/p_score', 'rouge_2/f_score', 'rouge_l/r_score', 'rouge_l/p_score', 'rouge_l/f_score']
 
         print(g_headers)
         for header in g_headers:
-            print(g_scores[header], end=',')
+            print("{:.2f}".format(g_scores[header]*100), end='\t')
         print()
 
-        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_target, dt, dt / n_target))
+        print('* evaluated {} samples, took {:.3f}s, averaging {:.3f}s/sample'.format(n_target, dt, dt / n_target))
 
     # Evaluate self-repetitions
     if args.check_repeats:
@@ -187,9 +224,9 @@ if __name__ == '__main__':
         # Sort the statistics by importance
         str_keys = ['full-sent'] + list(map(lambda n: '%d-gram' % n, sorted(ngram_repeats.keys(), reverse=True)))
         print(','.join(str_keys))
-        print(n_sent_repeats / n_source, end=',')
+        print("{:.2f}%".format(n_sent_repeats / n_source*100), end=',\t')
         for n in sorted(ngram_repeats.keys(), reverse=True):
-            print(ngram_repeats[n] / n_source, end=',')
+            print("{:.2f}%".format(ngram_repeats[n] / n_source*100), end=',\t')
         print()
 
-        print('* evaluated %i samples, took %gs, averaging %ss/sample' % (n_source, dt, dt / n_source))
+        print('* evaluated {} samples, took {:.3f}s, averaging {:.3f}s/sample'.format(n_source, dt, dt / n_source))
