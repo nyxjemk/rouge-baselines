@@ -179,7 +179,6 @@ if __name__ == '__main__':
 
         print(headers)
         for header in headers:
-            print(scores)
             print("{:.2f}".format(scores[header]*100), end='\t')
         print()
 
