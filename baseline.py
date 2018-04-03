@@ -82,6 +82,10 @@ def adhoc_old0(article):
     return good_sents
 
 @register
+def full(article):
+    return [article]
+
+@register
 def adhoc_base(article):
     article += ' </t> </t>'
     first_end = article.index(' </t> </t>')
@@ -148,7 +152,10 @@ if __name__ == '__main__':
         n_target = 0
         with open(args.target, 'r') as f:
             for i, article in enumerate(f):
-                candidate = split_sentences(article)
+                if args.method == "full":
+                    candidate = [article]
+                else:
+                    candidate = split_sentences(article)
                 references.append([candidate])
                 n_target += 1
 
