@@ -23,6 +23,40 @@ baseline_registry = {}
 register = register_to_registry(baseline_registry)
 
 # baseline methods
+
+@register
+def first_sentence_no_tag(article):
+    article = article.strip()
+    try:
+        if article[-1] != '.':
+            article += ' .'
+    except:
+        article += ' .'
+    good_sents = list(re.findall(r'.+?\.', article))
+    return good_sents[:1]
+
+@register
+def first_two_sentences_no_tag(article):
+    article = article.strip()
+    try:
+        if article[-1] != '.':
+            article += ' .'
+    except:
+        article += ' .'
+    good_sents = list(re.findall(r'.+?\.', article))
+    return good_sents[:2]
+
+@register
+def first_three_sentences_no_tag(article):
+    article = article.strip()
+    try:
+        if article[-1] != '.':
+            article += ' .'
+    except:
+        article += ' .'
+    good_sents = list(re.findall(r'.+?\.', article))
+    return good_sents[:3]
+
 @register
 def first_sentence(article, sentence_start_tag='<t>', sentence_end_tag='</t>'):
     ''' use sentence tags to output the first sentence of an article as its summary. '''
