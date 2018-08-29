@@ -179,7 +179,7 @@ if __name__ == '__main__':
         for i, article in enumerate(f):
             summary = process(article)
             summaries.append(summary)
-            print('source', len(summary), summary[0])
+            #print('source', len(summary), summary[0])
             n_source += 1
 
     # Read and preprocess a single candidate reference summary for each example
@@ -192,7 +192,7 @@ if __name__ == '__main__':
                 else:
                     candidate = split_sentences(article)
                 references.append([candidate])
-                print('target', len(candidate), candidate[0])
+                #print('target', len(candidate), candidate[0])
                 n_target += 1
 
         assert n_source == n_target, 'Source and target must have the same number of samples: {}!={}'.format(n_source, n_target)
@@ -273,3 +273,19 @@ if __name__ == '__main__':
         print()
 
         print('* evaluated {} samples, took {:.3f}s, averaging {:.3f}s/sample'.format(n_source, dt, dt / n_source))
+        
+    if True:
+        source_avg_sent = sum(map(len, summaries))/len(summaries)
+        source_avg_word = sum(map(lambda summary: sum(map(lambda sent: len(sent.split()), summary)), summaries))/len(summaries)
+        
+        print('Source:')
+        print('Average number of sentences:', round(source_avg_sent, 2))
+        print('Average number of words:    ', round(source_avg_word, 2))
+        
+        target_avg_sent = sum(map(len, references))/len(references)
+        target_avg_word = sum(map(lambda reference: sum(map(lambda sent: len(sent.split()), reference)), references))/len(references)
+        
+        print('Target:')
+        print('Average number of sentences:', round(target_avg_sent, 2))
+        print('Average number of words:    ', round(target_avg_word, 2))
+        
