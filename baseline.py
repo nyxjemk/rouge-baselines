@@ -284,8 +284,8 @@ if __name__ == '__main__':
         
         for i in range(20):
             print('ref', references[i])
-        target_avg_sent = sum(map(len, references))/len(references)
-        target_avg_word = sum(map(lambda reference: sum(map(lambda sent: len(sent.split()), reference)), references))/len(references)
+        target_avg_sent = sum(map(lambda reference: len(reference[0]), references))/len(references])
+        target_avg_word = sum(map(lambda reference: sum(map(lambda sent: len(sent.split()), reference[0])), references))/len(references)
         
         print('Target:')
         print('Average number of sentences:', round(target_avg_sent, 2))
