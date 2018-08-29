@@ -179,6 +179,7 @@ if __name__ == '__main__':
         for i, article in enumerate(f):
             summary = process(article)
             summaries.append(summary)
+            print(summary[0])
             n_source += 1
 
     # Read and preprocess a single candidate reference summary for each example
@@ -191,6 +192,7 @@ if __name__ == '__main__':
                 else:
                     candidate = split_sentences(article)
                 references.append([candidate])
+                print(candidate[0])
                 n_target += 1
 
         assert n_source == n_target, 'Source and target must have the same number of samples: {}!={}'.format(n_source, n_target)
