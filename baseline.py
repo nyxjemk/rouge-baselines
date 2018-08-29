@@ -193,7 +193,7 @@ if __name__ == '__main__':
                 references.append([candidate])
                 n_target += 1
 
-        assert n_source == n_target, 'Source and target must have the same number of samples.'
+        assert n_source == n_target, 'Source and target must have the same number of samples: {}!={}'.format(n_source, n_target)
 
     # Run official ROUGE evaluation
     if args.run_rouge:
